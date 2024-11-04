@@ -1,7 +1,10 @@
 #include "esc.h"
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
+#include "hardware/gpio.h"
+#include "pico/stdlib.h"
 #include <stdlib.h>
+
 
 #define PWM_RESOLUTION 16
 #define MIN_THROTTLE 0.0f
