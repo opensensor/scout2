@@ -1,0 +1,25 @@
+# Build directory
+build/
+.vscode/
+.idea/
+
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
