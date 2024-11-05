@@ -67,8 +67,10 @@ if(BUILD_PICO)
         flight-controller/tests/test_framework.c
         flight-controller/tests/pid_controller_tests.c
         flight-controller/tests/attitude_estimator_tests.c
+	flight-controller/tests/mpu6050_tests.c
         flight-controller/src/core/pid_controller.c
         flight-controller/src/core/attitude_estimator.c
+	flight-controller/src/drivers/mpu6050.c
     )
 
     # Main flight controller executable

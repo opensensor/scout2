@@ -25,7 +25,7 @@ case "$1" in
     "pico")
         echo "Building Pico targets..."
         cd build-pico
-        cmake -DBUILD_HOST=OFF ..
+        cmake -DBUILD_HOST=OFF -DPICO_BOARD=pico2 ..
         make
         ;;
     "all")
