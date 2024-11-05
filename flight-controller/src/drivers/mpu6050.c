@@ -32,13 +32,13 @@ static inline int16_t combine_bytes(uint8_t msb, uint8_t lsb) {
 
 static bool mpu6050_write_reg(mpu6050_t* dev, uint8_t reg, uint8_t data) {
     uint8_t buf[2] = {reg, data};
-    return i2c_write_blocking(dev->i2c, dev->addr, buf, 2, false) == 2;
+    return i2c_write_timeout_us(dev->i2c, dev->addr, buf, 2, false, 1000000) == 2;
 }
 
 static uint8_t mpu6050_read_reg(mpu6050_t* dev, uint8_t reg) {
     uint8_t data;
-    i2c_write_blocking(dev->i2c, dev->addr, &reg, 1, true);
-    i2c_read_blocking(dev->i2c, dev->addr, &data, 1, false);
+    i2c_write_timeout_us(dev->i2c, dev->addr, &reg, 1, true, 1000000);
+    i2c_read_timeout_us(dev->i2c, dev->addr, &data, 1, false, 1000000);
     return data;
 }
 
@@ -137,8 +137,8 @@ void mpu6050_read_raw(mpu6050_t* dev, vector3_t* accel, vector3_t* gyro) {
     uint8_t reg = MPU6050_REG_ACCEL_XOUT_H;
     
     // Read all data at once (6 bytes accel, 2 bytes temp, 6 bytes gyro)
-    i2c_write_blocking(dev->i2c, dev->addr, &reg, 1, true);
-    i2c_read_blocking(dev->i2c, dev->addr, buffer, 14, false);
+    i2c_write_timeout_us(dev->i2c, dev->addr, &reg, 1, true, 1000000);
+    i2c_read_timeout_us(dev->i2c, dev->addr, buffer, 14, false, 1000000);
     
     // Combine bytes and store in vectors
     accel->x = combine_bytes(buffer[0], buffer[1]);
