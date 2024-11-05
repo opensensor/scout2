@@ -3,43 +3,40 @@
 #include <stdlib.h>
 #include <math.h>
 
-bool test_pid_initialization() {
+void test_pid_initialization(void) {
     float kp = 1.0f, ki = 0.1f, kd = 0.05f;
     pid_controller_t* pid = pid_controller_init(kp, ki, kd);
     
-    ASSERT_TRUE(pid != NULL);
-    ASSERT_FLOAT_EQUAL(kp, pid->kp, 0.0001f);
-    ASSERT_FLOAT_EQUAL(ki, pid->ki, 0.0001f);
-    ASSERT_FLOAT_EQUAL(kd, pid->kd, 0.0001f);
+    TEST_ASSERT_NOT_NULL(pid);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, kp, pid->kp);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, ki, pid->ki);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, kd, pid->kd);
     
     free(pid);
-    return true;
 }
 
-bool test_pid_reset() {
+void test_pid_reset(void) {
     pid_controller_t* pid = pid_controller_init(1.0f, 0.1f, 0.05f);
     
     // Run PID to accumulate some state
     pid_controller_update(pid, 1.0f, 0.1f);
     pid_controller_reset(pid);
     
-    ASSERT_FLOAT_EQUAL(0.0f, pid->integral, 0.0001f);
-    ASSERT_FLOAT_EQUAL(0.0f, pid->prev_error, 0.0001f);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid->integral);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid->prev_error);
     
     free(pid);
-    return true;
 }
 
-bool test_pid_output_limits() {
+void test_pid_output_limits(void) {
     pid_controller_t* pid = pid_controller_init(1.0f, 0.1f, 0.05f);
     pid_controller_set_limits(pid, 0.5f, 0.25f);
     
     float output = pid_controller_update(pid, 2.0f, 0.1f);
-    ASSERT_FLOAT_EQUAL(0.5f, output, 0.0001f);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.5f, output);
     
     output = pid_controller_update(pid, -2.0f, 0.1f);
-    ASSERT_FLOAT_EQUAL(-0.5f, output, 0.0001f);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, -0.5f, output);
     
     free(pid);
-    return true;
 }

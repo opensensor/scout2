@@ -1,7 +1,9 @@
-#include "test_framework.h"
+#include "unity.h"
 #include "pid_controller_tests.h"
 #include "attitude_estimator_tests.h"
 #include "mpu6050_tests.h"
+#include "hardware/gpio.h"
+#include "hardware/i2c.h"
 
 #ifndef HOST_BUILD
 #include "pico/stdlib.h"
@@ -23,39 +25,103 @@ static void wait_for_usb() {
     sleep_ms(250);
     gpio_put(LED_PIN, 1);
 }
-
 #endif
 
-int main() {
+// Test configuration for MPU6050
+static const uint8_t TEST_SDA_PIN = 4;
+static const uint8_t TEST_SCL_PIN = 5;
+static bool mpu6050_available = false;
+
+// Helper to safely initialize I2C with timeout
+static bool init_i2c_with_timeout(void) {
+    // Configure I2C pins
+    gpio_set_function(TEST_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(TEST_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(TEST_SDA_PIN);
+    gpio_pull_up(TEST_SCL_PIN);
+
+    // Try to initialize I2C
+    if (!i2c_init(i2c0, 400000)) {  // 400 kHz
+        return false;
+    }
+
+    return true;
+}
+
+// Helper function to check if MPU6050 is present without hanging
+static bool is_mpu6050_present(void) {
+    // First check if I2C can be initialized
+    if (!init_i2c_with_timeout()) {
+        return false;
+    }
+
+    // Now try to init the MPU6050 without hanging
+    mpu6050_config_t config = {0};
+    mpu6050_t* dev = mpu6050_init(TEST_SDA_PIN, TEST_SCL_PIN, &config);
+    if (!dev) {
+        return false;
+    }
+
+    // Quick connection test
+    bool present = mpu6050_test_connection(dev);
+    free(dev);
+    return present;
+}
+
+void setUp(void) {
+    // Check MPU6050 presence once at startup
+    static bool hardware_checked = false;
+    
+    if (!hardware_checked) {
+        mpu6050_available = is_mpu6050_present();
+        hardware_checked = true;
+        if (!mpu6050_available) {
+            TEST_MESSAGE("MPU6050 not detected - hardware tests will be skipped");
+        }
+    }
+}
+
+void tearDown(void) {
+    // Nothing to do here
+}
+
+// Declare all test functions
+void test_pid_initialization(void);
+void test_pid_reset(void);
+void test_pid_output_limits(void);
+void test_attitude_estimator_initialization(void);
+void test_attitude_estimator_level(void);
+void test_mpu6050_initialization(void);
+void test_mpu6050_connection(void);
+void test_mpu6050_calibration(void);
+void test_mpu6050_scaling(void);
+void test_mpu6050_read_operations(void);
+
+int main(void) {
     #ifndef HOST_BUILD    
     stdio_init_all();  // Only for Pico
     wait_for_usb();
     #endif
 
-    // Initialize test cases
-    test_case_t test_cases[] = {
-        {"PID Initialization", test_pid_initialization, false, false},
-        {"PID Reset", test_pid_reset, false, false},
-        {"PID Output Limits", test_pid_output_limits, false, false},
-        {"Attitude Estimator Init", test_attitude_estimator_initialization, false, false},
-        {"Attitude Estimator Level", test_attitude_estimator_level, false, false},
-	{"MPU6050 Initialization", test_mpu6050_initialization, false, false},
-	{"MPU6050 Connection", test_mpu6050_connection, false, false},
-	{"MPU6050 Calibration", test_mpu6050_calibration, false, false},
-	{"MPU6050 Scaling", test_mpu6050_scaling, false, false},
-	{"MPU6050 Read Operations", test_mpu6050_read_operations, false, false}
-    };
+    UNITY_BEGIN();
 
-    // Create test suite
-    test_suite_t test_suite = {
-        .name = "Flight Controller Tests",
-        .cases = test_cases,
-        .num_cases = sizeof(test_cases) / sizeof(test_case_t)
-    };
+    // PID Controller Tests
+    RUN_TEST(test_pid_initialization);
+    RUN_TEST(test_pid_reset);
+    RUN_TEST(test_pid_output_limits);
 
-    printf("\nRunning Flight Controller Tests...\n");
-    run_test_suite(&test_suite);
-    print_test_results(&test_suite);
+    // Attitude Estimator Tests
+    RUN_TEST(test_attitude_estimator_initialization);
+    RUN_TEST(test_attitude_estimator_level);
 
-    return test_suite.failed > 0 ? 1 : 0;
+    // MPU6050 Tests - only run if hardware is available
+    if (mpu6050_available) {
+        RUN_TEST(test_mpu6050_initialization);
+        RUN_TEST(test_mpu6050_connection);
+        RUN_TEST(test_mpu6050_calibration);
+        RUN_TEST(test_mpu6050_scaling);
+        RUN_TEST(test_mpu6050_read_operations);
+    }
+
+    return UNITY_END();
 }

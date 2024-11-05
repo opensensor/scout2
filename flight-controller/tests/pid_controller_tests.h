@@ -1,6 +1,6 @@
 #pragma once
-#include "test_framework.h"
+#include "unity.h"
 
-bool test_pid_initialization(void);
-bool test_pid_reset(void);
-bool test_pid_output_limits(void);
+void test_pid_initialization(void);
+void test_pid_reset(void);
+void test_pid_output_limits(void);

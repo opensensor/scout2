@@ -1,5 +1,5 @@
 #pragma once
-#include "test_framework.h"
+#include "unity.h"
 
-bool test_attitude_estimator_initialization(void);
-bool test_attitude_estimator_level(void);
+void test_attitude_estimator_initialization(void);
+void test_attitude_estimator_level(void);
